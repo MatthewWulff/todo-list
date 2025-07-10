@@ -1,6 +1,4 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 import "./App.css";
 
 function App() {
@@ -19,8 +17,12 @@ function App() {
     },
   ];
   const [tasks, setTasks] = useState(initialState);
-  const [todo, setTodo] = useState();
+  const [todo, setTodo] = useState("");
+  const [editingId, setEditingId] = useState(null); 
+  const [editedTitle, setEditedTitle] = useState(""); 
+
   function handleSubmit(e) {
+    e.preventDefault();
     const newToDo = {
       userId: 1,
       id: tasks.length + 1,
@@ -28,7 +30,7 @@ function App() {
       completed: false,
     };
     setTasks([newToDo, ...tasks]);
-    e.preventDefault();
+    setTodo("");
   }
 
   function handleProgress(taskId) {
@@ -38,15 +40,34 @@ function App() {
       }
       return task;
     });
-    
     setTasks(newTasks);
   }
-  function handleDelete(taskId){
-     const newTasks = tasks.filter((task) => task.id !== taskId);
-    
+
+  function handleDelete(taskId) {
+    const newTasks = tasks.filter((task) => task.id !== taskId);
     setTasks(newTasks);
   }
-  
+
+  function handleEdit(taskId) {
+    const taskToEdit = tasks.find((task) => task.id === taskId);
+    setEditingId(taskId);
+    setEditedTitle(taskToEdit.title);
+  }
+
+  function handleSave(taskId) {
+    const updatedTasks = tasks.map((task) => {
+      if (task.id === taskId) {
+        return { ...task, title: editedTitle };
+      }
+      return task;
+    });
+    setTasks(updatedTasks);
+    setEditingId(null); // Exit edit mode
+  }
+
+  function handleCancel() {
+    setEditingId(null); // Exit edit mode without saving
+  }
 
   return (
     <>
@@ -66,30 +87,31 @@ function App() {
             onChange={() => handleProgress(task.id)}
             checked={task.completed}
           />
-          {task.title}
-          <button>Edit</button>
-          <button disabled={!task.completed} onClick={()=> handleDelete(task.id)}>Delete</button>
+          
+          {/* Conditional rendering for edit mode */}
+          {editingId === task.id ? (
+            <>
+              <input
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+              />
+              <button onClick={() => handleSave(task.id)}>Save</button>
+              <button onClick={handleCancel}>Cancel</button>
+            </>
+          ) : (
+            <>
+              {task.title}
+              <button onClick={() => handleEdit(task.id)}>Edit</button>
+              <button
+                disabled={!task.completed}
+                onClick={() => handleDelete(task.id)}
+              >
+                Delete
+              </button>
+            </>
+          )}
         </div>
       ))}
-      <hr />
-      <div>
-        <input type="checkbox" />
-        Create Mockup
-        <button>Edit</button>
-        <button>Delete</button>
-      </div>
-
-      <div>
-        <input type="checkbox" />
-        Create Static Layout
-        <button>Edit</button>
-        <button>Delete</button>
-      </div>
-      <div>
-        <input type="checkbox" />
-        <input type="text" placeholder="Add Interactivity" />
-        <button>Save</button>
-      </div>
     </>
   );
 }
